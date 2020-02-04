@@ -5,7 +5,8 @@ public class PooledNIOSocketClient extends NioSocketClient {
 	private boolean busy = false; // 此对象是否正在使用的标志，默认没有正在使用
 
 	// 构造函数，池化对象
-	public PooledNIOSocketClient() {
+	public PooledNIOSocketClient(String serverName,int port) {
+		super(serverName,port);
 	}
 
 	// 获得对象对象是否忙

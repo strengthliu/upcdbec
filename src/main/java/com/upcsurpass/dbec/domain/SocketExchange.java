@@ -6,10 +6,50 @@ public class SocketExchange {
 
 	int nExchangeID; // 命令ID
 	int nCount; // 数据包个数
+	public int getnExchangeID() {
+		return nExchangeID;
+	}
+
+	public int getnCount() {
+		return nCount;
+	}
+
+	public int getnLength() {
+		return nLength;
+	}
+
+	public int getnParam1() {
+		return nParam1;
+	}
+
+	public int getnParam2() {
+		return nParam2;
+	}
+
+	public void setnExchangeID(int nExchangeID) {
+		this.nExchangeID = nExchangeID;
+	}
+
+	public void setnCount(int nCount) {
+		this.nCount = nCount;
+	}
+
+	public void setnLength(int nLength) {
+		this.nLength = nLength;
+	}
+
+	public void setnParam1(int nParam1) {
+		this.nParam1 = nParam1;
+	}
+
+	public void setnParam2(int nParam2) {
+		this.nParam2 = nParam2;
+	}
+
 	int nLength; // 本数据包长度(不含包头)
 	int nParam1; // 扩展参数1
 	int nParam2; // 扩展参数2
-	byte buffer[]; // 包体
+	byte buffer[] ; // 包体
 
 	public byte[] getBuffer() {
 		return buffer;
@@ -20,8 +60,35 @@ public class SocketExchange {
 	}
 
 
-	public SocketExchange(Byte[] data) {
+	public SocketExchange(byte[] b) {
 //		0852000001000000040000000000000000000000199a365e
+		// 写第一个参数
+		nExchangeID = b[0] & 0xFF |  
+                (b[1] & 0xFF) << 8 |  
+                (b[2] & 0xFF) << 16 |  
+                (b[3] & 0xFF) << 24;  
+		
+		nCount = b[4] & 0xFF |  
+                (b[5] & 0xFF) << 8 |  
+                (b[6] & 0xFF) << 16 |  
+                (b[7] & 0xFF) << 24;  
+		
+		nLength = b[8] & 0xFF |  
+                (b[9] & 0xFF) << 8 |  
+                (b[10] & 0xFF) << 16 |  
+                (b[11] & 0xFF) << 24;  
+		
+		nParam1 = b[12] & 0xFF |  
+                (b[13] & 0xFF) << 8 |  
+                (b[14] & 0xFF) << 16 |  
+                (b[15] & 0xFF) << 24;  
+		
+		nParam2 = b[16] & 0xFF |  
+                (b[17] & 0xFF) << 8 |  
+                (b[18] & 0xFF) << 16 |  
+                (b[19] & 0xFF) << 24;  
+		this.buffer = b; // 这里没有取部分，是为了节省分配。
+//		System.arraycopy(b, 20, this.buffer, 0, b.length-20);
 		
 	}
 

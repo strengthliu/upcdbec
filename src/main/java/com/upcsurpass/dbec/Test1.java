@@ -6,7 +6,7 @@ public class Test1 {
 
 	public Object request() {
 		SynchronizedMethod sm = null;
-		Object ret = sm.doRequest(null);
+//		Object ret = sm.doRequest(null);
 		return null;
 	}
 }

@@ -8,6 +8,8 @@ public final class GlobalConsts {
 	public static final int  DEFAULT_ISERVERPORT			= 51025;	//IServer端口号
 
 	public static final int MAXLEN_EXCHANGEBUFFER	= 32768;  // 每个数据包的包体最大长度
+	
+	public static final int RESPONSE_COM_RATE = 1000;
 	/**
 	 * 9 命令ID列表
 	 */

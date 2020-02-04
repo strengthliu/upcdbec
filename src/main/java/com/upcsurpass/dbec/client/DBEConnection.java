@@ -19,12 +19,14 @@ public class DBEConnection extends DBECConnectionPool {
 	public DBEConnection(String serverName, int port) {
 		this.serverName = serverName;
 		this.port = port;
+		this.createPool();
 	}
 
 	@Override
 	public PooledNIOSocketClient create() {
-		NioSocketClient nsc = NioSocketClient.create(serverName, GlobalConsts.DEFAULT_DBESERVERPORT);
-		return new PooledNIOSocketClient();
+		PooledNIOSocketClient ins = new PooledNIOSocketClient(serverName, GlobalConsts.DEFAULT_DBESERVERPORT);
+		ins.start();
+		return ins;
 	}
 
 }

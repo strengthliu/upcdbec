@@ -1,5 +1,6 @@
 package com.upcsurpass.dbec.client;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
+import com.upcsurpass.dbec.domain.SocketExchange;
 import com.upcsurpass.dbec.domain.SynchronizedMethod;
 import com.upcsurpass.dbec.tools.ByteTools;
 
@@ -44,11 +46,12 @@ public class NioSocketClient {
 	 */
 	private volatile boolean isShutDown = false;
 	/**
-	 * 调度锁 初始值为1
+	 * 调度锁，应该每个频道1个，现在只有1个。 因为只有1个状态，所以初始值为1
 	 */
 	private CountDownLatch countDownLatch = new CountDownLatch(1);
 	/**
-	 * 频道 只有1个
+	 * 频道，应该有多个。 现在只有1个。
+	 * 如果
 	 */
 	private SocketChannel socketChannel;
 	/**
@@ -64,14 +67,14 @@ public class NioSocketClient {
 	 */
 	private final ByteBuffer sendDataBuffer = ByteBuffer.allocate(DATA_MAX_LEN);
 
-	private NioSocketClient(String ip, int port) {
+	public NioSocketClient(String ip, int port) {
 		this.serverIp = ip;
 		this.port = port;
 	}
 
-	public static NioSocketClient create(String serverIp, int port) {
-		return new NioSocketClient(serverIp, port);
-	}
+//	public static NioSocketClient create(String serverIp, int port) {
+//		return new NioSocketClient(serverIp, port);
+//	}
 
 	/**
 	 * 发送任务处理线程
@@ -101,12 +104,16 @@ public class NioSocketClient {
 				countDownLatch.await(); // 等待当前正在发送线程的执行完成
 				while (!isShutDown) { // 如果还没有关闭
 					if (socketChannel != null && socketChannel.isConnected()) { // 如果当前有连接有channel
-						LOGGER.info("executor.execute(()");
+						LOGGER.info("socketChannel不为空并且已经连接成功。执行发送数据线程任务。当前线程->"+Thread.currentThread().getName());
 						byte[] data = sendDataQueue.take(); // 从队列中取出一个要发送的数据
 						if (data != null && data.length > 0) {
+							LOGGER.info("发送数据线程 -> "+Thread.currentThread().getName()+" .");
 							sendDataBuffer.clear(); // 清除上一次的数据
 							sendDataBuffer.put(data); // 写上这一次的数据
 							sendDataBuffer.flip(); // 缓冲区就绪
+							/**
+							 * TODO: 一个socket可以有多个channel，这里先只1个。
+							 */
 							socketChannel.write(sendDataBuffer); // 向频道中写入
 						}
 					}
@@ -119,7 +126,9 @@ public class NioSocketClient {
 		executor.execute(() -> {
 			try {
 				LOGGER.info("启动及接收数据线程");
-
+				/**
+				 * 一个selector可以绑定多个socketChannel，现在先做一个。
+				 */
 				socketChannel = SocketChannel.open(); // 打开一个channel
 				socketChannel.configureBlocking(false); // 配置为非阻塞
 				selector = Selector.open(); // 打开一个选择器
@@ -127,8 +136,6 @@ public class NioSocketClient {
 				// 连接服务端socket
 				socketChannel.connect(socketAddress); // 将这个频道连接到服务器地址的
 				socketChannel.register(selector, SelectionKey.OP_CONNECT); // 注册选择器
-				// 数据缓冲
-				ByteBuffer dataBuffer = ByteBuffer.allocate(DATA_MAX_LEN); // 分配缓冲区
 				// selector处理
 				while (!isShutDown) { // 如果没有关闭就循环执行
 					selector.select(); // 选择器选择。监听所有注册的Channel，一直阻塞知道有任何一个客户端Channel有相应的事件到达
@@ -153,17 +160,9 @@ public class NioSocketClient {
 								countDownLatch.countDown(); // 减小计数以使这个连接可发送数据
 							}
 						} else if (key.isReadable()) { // 接收到了OP_READ有返回数据可读事件
-							dataBuffer.clear();
-							int readLen = client.read(dataBuffer);
-							byte[] result = new byte[readLen];
-							dataBuffer.flip();
-							dataBuffer.get(result);
-							LOGGER.info("返回值 ："+ByteTools.byteArrToHexString(result));
-							// 通知处理数据
-							if(synchronizedMethod!=null)
-								synchronizedMethod.addResponseData(result);
-							else
-								LOGGER.info("no synchronizedMethod");
+							LOGGER.info("收到可读信号事件... 当前线程 => "+Thread.currentThread().getName());
+							read(client);
+
 						} else if (key.isValid() && key.isWritable()) {// 如果可往客户端连接中写入数据，则处理该事件
 //					            write(key);
 					    }
@@ -175,6 +174,34 @@ public class NioSocketClient {
 		});
 	}
 
+	/**
+	 * TODO: 现在有错误。由于可能两个线程都收到了读数据的信号，就会执行两遍读数据。
+	 * @param client
+	 * @throws IOException
+	 */
+	private void read(SocketChannel client) throws IOException {
+		LOGGER.info("返回值 ：read(SocketChannel client) 当前线程=> "+Thread.currentThread().getName());
+		ByteBuffer dataBuffer = ByteBuffer.allocate(DATA_MAX_LEN); // 分配缓冲区
+		dataBuffer.clear();
+		int readLen = client.read(dataBuffer);
+		byte[] result = new byte[readLen];
+		dataBuffer.flip();
+		dataBuffer.get(result);
+		LOGGER.info("返回值 ："+ByteTools.byteArrToHexString(result));
+		// 通知处理数据
+		SocketExchange se = new SocketExchange(result);
+		/** 
+		 * TODO: 
+		 * 1、应该根据se里的命令ID等信息，决定分配给哪一个。
+		 * 现在DBES还不支持。
+		 * 2、应该根据Client（channel决定结果发给谁）
+		 */
+		if(synchronizedMethod!=null)
+			synchronizedMethod.addResponseData(se);
+		else
+			LOGGER.info("no synchronizedMethod");
+	}
+	
 	/**
 	 * 关闭该客户端
 	 */
@@ -195,6 +222,7 @@ public class NioSocketClient {
 
 
 	/**
+	 * SynchronizedMethod应该绑定在Channel上。
 	 * 现在只接受一个SynchronizedMethod
 	 */
 	SynchronizedMethod synchronizedMethod;
