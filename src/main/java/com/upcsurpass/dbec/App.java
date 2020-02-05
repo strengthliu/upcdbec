@@ -4,10 +4,6 @@ import java.util.Date;
 
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
 import com.upcsurpass.dbec.client.DBEClient;
-import com.upcsurpass.dbec.client.NioSocketClient;
-import com.upcsurpass.dbec.domain.SocketExchange;
-import com.upcsurpass.dbec.domain.SynchronizedMethod;
-import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
 
 /**
  * Hello world!
@@ -16,9 +12,14 @@ import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
 public class App {
 	public static void main(String[] args) {
 		// GetServerCurrentTime gct = new GetServerCurrentTime();
-		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
-		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+//		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
+//		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+		
+		DBEClient.connect("192.168.43.127", GlobalConsts.DEFAULT_DBESERVERPORT);
+		long t = DBEClient.DBECGetServerCurrentTime("192.168.43.127");
+		
 		System.out.println(new Date(t).toLocaleString());
+		DBEClient.close();
 	}
 
 	public static void test1() {

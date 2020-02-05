@@ -87,7 +87,7 @@ public class NioSocketClient {
 			return;
 		}
 		try {
-			LOGGER.info("sendData => " + data);
+			LOGGER.debug("sendData => " + data);
 			sendDataQueue.offer(data); // 向队列里插入一个请求数据
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -98,16 +98,19 @@ public class NioSocketClient {
 	 * 1 启动连接及读数据监听线程； 2 启动发数据监听线程；
 	 */
 	public void start() {
-		LOGGER.info("start()");
+//		LOGGER.debug("启动start() 当前线程=> "+Thread.currentThread().getName());
 		executor.execute(() -> { // 启动发送数据线程
 			try {
+				LOGGER.debug("启动发送数据线程 当前线程=> "+Thread.currentThread().getName());
+				LOGGER.debug("当前countDownLatch => "+countDownLatch.toString());
 				countDownLatch.await(); // 等待当前正在发送线程的执行完成
 				while (!isShutDown) { // 如果还没有关闭
 					if (socketChannel != null && socketChannel.isConnected()) { // 如果当前有连接有channel
-						LOGGER.info("socketChannel不为空并且已经连接成功。执行发送数据线程任务。当前线程->"+Thread.currentThread().getName());
+						LOGGER.debug("socketChannel不为空并且已经连接成功。执行发送数据线程任务。当前线程->"+Thread.currentThread().getName());
+						LOGGER.debug("socketChannel不为空并且已经连接成功。当前countDownLatch => "+countDownLatch.toString());
 						byte[] data = sendDataQueue.take(); // 从队列中取出一个要发送的数据
 						if (data != null && data.length > 0) {
-							LOGGER.info("发送数据线程 -> "+Thread.currentThread().getName()+" .");
+							LOGGER.debug("发送数据线程 -> "+Thread.currentThread().getName()+" .");
 							sendDataBuffer.clear(); // 清除上一次的数据
 							sendDataBuffer.put(data); // 写上这一次的数据
 							sendDataBuffer.flip(); // 缓冲区就绪
@@ -125,7 +128,6 @@ public class NioSocketClient {
 		// 启动及接收数据线程
 		executor.execute(() -> {
 			try {
-				LOGGER.info("启动及接收数据线程");
 				/**
 				 * 一个selector可以绑定多个socketChannel，现在先做一个。
 				 */
@@ -136,6 +138,10 @@ public class NioSocketClient {
 				// 连接服务端socket
 				socketChannel.connect(socketAddress); // 将这个频道连接到服务器地址的
 				socketChannel.register(selector, SelectionKey.OP_CONNECT); // 注册选择器
+				LOGGER.debug("启动及接收数据线程,当前线程->"+Thread.currentThread().getName());
+				LOGGER.debug("启动及接收数据线程,socketChannel=>"+socketChannel.toString()+" - 1 - "+socketChannel.hashCode());
+//				LOGGER.debug("启动及接收数据线程,socketChannel=>"+socketChannel.toString()+" - 2 - "+socketChannel.hashCode());
+				LOGGER.debug("启动及接收数据线程,selector=>"+selector.toString());
 				// selector处理
 				while (!isShutDown) { // 如果没有关闭就循环执行
 					selector.select(); // 选择器选择。监听所有注册的Channel，一直阻塞知道有任何一个客户端Channel有相应的事件到达
@@ -151,16 +157,19 @@ public class NioSocketClient {
 						client = (SocketChannel) key.channel(); // 返回当前SelectionKey中所封装的Channel对象
 						
 				        if (key.isAcceptable()) {// 如果是有新的客户端Channel连接建立，则处理该事件
+							LOGGER.debug("接收数据线程,接收到了信号：key=>"+key.toString()+"当前线程->"+Thread.currentThread().getName());
 //				          accept(key, selector); // 注册该客户端
 				        } else if (key.isConnectable()) { // 接收到了OP_CONNECT连接事件
 							// PLog.d(TAG,"与服务端口["+serverIp+":"+port+"]连接成功");
 							if (client.finishConnect()) {
 								client.configureBlocking(false);
 								client.register(selector, SelectionKey.OP_READ);
+								LOGGER.debug("与服务端口连接成功。当前线程->"+Thread.currentThread().getName());
+								LOGGER.debug("与服务端口连接成功。当前countDownLatch => "+countDownLatch.toString());
 								countDownLatch.countDown(); // 减小计数以使这个连接可发送数据
 							}
 						} else if (key.isReadable()) { // 接收到了OP_READ有返回数据可读事件
-							LOGGER.info("收到可读信号事件... 当前线程 => "+Thread.currentThread().getName());
+							LOGGER.debug("收到可读信号事件... 当前线程 => "+Thread.currentThread().getName());
 							read(client);
 
 						} else if (key.isValid() && key.isWritable()) {// 如果可往客户端连接中写入数据，则处理该事件
@@ -180,14 +189,14 @@ public class NioSocketClient {
 	 * @throws IOException
 	 */
 	private void read(SocketChannel client) throws IOException {
-		LOGGER.info("返回值 ：read(SocketChannel client) 当前线程=> "+Thread.currentThread().getName());
+		LOGGER.debug("返回值 ：read(SocketChannel client) 当前线程=> "+Thread.currentThread().getName());
 		ByteBuffer dataBuffer = ByteBuffer.allocate(DATA_MAX_LEN); // 分配缓冲区
 		dataBuffer.clear();
 		int readLen = client.read(dataBuffer);
 		byte[] result = new byte[readLen];
 		dataBuffer.flip();
 		dataBuffer.get(result);
-		LOGGER.info("返回值 ："+ByteTools.byteArrToHexString(result));
+		LOGGER.debug("返回值 ："+ByteTools.byteArrToHexString(result));
 		// 通知处理数据
 		SocketExchange se = new SocketExchange(result);
 		/** 
@@ -199,7 +208,7 @@ public class NioSocketClient {
 		if(synchronizedMethod!=null)
 			synchronizedMethod.addResponseData(se);
 		else
-			LOGGER.info("no synchronizedMethod");
+			LOGGER.debug("no synchronizedMethod");
 	}
 	
 	/**

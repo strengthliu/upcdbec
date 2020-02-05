@@ -5,6 +5,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
 import com.upcsurpass.dbec.domain.SocketExchange;
 import com.upcsurpass.dbec.exception.GecException;
@@ -18,6 +21,7 @@ import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
  *
  */
 public class DBEClient implements IDBEClient{//,IGecService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(DBEClient.class);
 //	static Hashtable<String,Integer> servers = new Hashtable<String,Integer>();
 	
 	static Hashtable<String,DBEConnection> connections = new Hashtable<String,DBEConnection>();
@@ -57,6 +61,7 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	public static long DBECGetServerCurrentTime(String lpszServerName) {
 		DBEConnection connection = connections.get(lpszServerName);
 		PooledNIOSocketClient pnsc = connection.getObject();
+		LOGGER.debug(" 开始执行请求 ： PooledNIOSocketClient=> "+pnsc.toString());
 		
 		//========================================================
 		GetServerCurrentTime gsct = new GetServerCurrentTime(pnsc);

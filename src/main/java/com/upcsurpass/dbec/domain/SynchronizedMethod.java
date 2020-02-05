@@ -5,7 +5,11 @@ import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
+import com.upcsurpass.dbec.client.DBEClient;
 import com.upcsurpass.dbec.client.DBEConnection;
 import com.upcsurpass.dbec.client.NioSocketClient;
 import com.upcsurpass.dbec.client.PooledNIOSocketClient;
@@ -22,6 +26,7 @@ public abstract class SynchronizedMethod{ // extends MethodHandle {
 //		super(type, form);
 //	}
 	
+	private static final Logger LOGGER = LoggerFactory.getLogger(SynchronizedMethod.class);
 	protected CountDownLatch countDownLatchReqResp = new CountDownLatch(1);
 //	private CountDownLatch countDownLatchDataPackageCount;// = new CountDownLatch(1);
 	
@@ -73,7 +78,15 @@ public abstract class SynchronizedMethod{ // extends MethodHandle {
 		// 设置锁
 //		nsc.setCountDownLatchReqResp(countDownLatchReqResp);
 		// 调用客户端发请求
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		LOGGER.debug("=============准备发送=========================");
 		pnsc.sendData(se.toByte());
+		LOGGER.debug("发送完成=========================");
 		try {
 			countDownLatchReqResp.await();
 		} catch (InterruptedException e) {

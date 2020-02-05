@@ -35,7 +35,7 @@ public class GetServerCurrentTime extends SynchronizedMethod {
 
 	@Override
 	public Object parseObject(ArrayList<byte[]> d) {
-		LOGGER.info("d=>"+d.size());
+		LOGGER.debug("d=>"+d.size());
 		// TODO Auto-generated method stub
 //		int len = 80;
 //      ByteBuffer buffer = ByteBuffer.allocate(len);
@@ -52,7 +52,7 @@ public class GetServerCurrentTime extends SynchronizedMethod {
 //		return deviceNote.trim();
 //	}
 
-		return null;
+		return new Long(100);
 	}
 
 }
