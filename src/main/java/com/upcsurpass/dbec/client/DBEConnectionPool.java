@@ -10,7 +10,7 @@ import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
 
 public abstract class DBEConnectionPool {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DBEConnectionPool.class);
-    public static int numObjects = 3; // 对象池的大小
+    public static int numObjects = 5; // 对象池的大小
     public static int maxObjects = 20; // 对象池最大的大小
     protected Vector<PooledNIOSocketClient> objects = null; // 存放对象池中对象的向量(PooledObject类型)
 
@@ -128,16 +128,29 @@ public abstract class DBEConnectionPool {
         }
         PooledNIOSocketClient pObj = null;
         Enumeration<PooledNIOSocketClient> enumerate = objects.elements();
+        int i = 1;
         while (enumerate.hasMoreElements()) {
             pObj = (PooledNIOSocketClient) enumerate.nextElement();
             // 如果忙，等 0.5 秒
             if (pObj.isBusy()) {
                 wait(500); // 等
             }
+            LOGGER.debug("关闭："+i+" / "+objects.size());
+            i++;
             pObj.close();
-            // 从对象池向量中删除它
-            objects.removeElement(pObj);
+            LOGGER.debug("关闭 - 关闭结束 ");
         }
+        Enumeration<PooledNIOSocketClient> enumerate1 = objects.elements();
+        objects.removeAllElements();
+//        i = 1;
+//        while (enumerate1.hasMoreElements()) {
+//            pObj = (PooledNIOSocketClient) enumerate1.nextElement();
+//            LOGGER.debug("移除："+i+" / "+objects.size());
+//            i++;
+//            // 从对象池向量中删除它
+//            objects.removeElement(pObj);
+//            LOGGER.debug("关闭 - 移除结束 ");
+//        }
         // 置对象池为空
         objects = null;
     }

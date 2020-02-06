@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
 import com.upcsurpass.dbec.client.DBEClient;
+import com.upcsurpass.dbec.exception.GecException;
 
 /**
  * Hello world!
@@ -15,10 +16,24 @@ public class App {
 //		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
 //		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
 		
-		DBEClient.connect("192.168.43.127", GlobalConsts.DEFAULT_DBESERVERPORT);
-		long t = DBEClient.DBECGetServerCurrentTime("192.168.43.127");
-		
-		System.out.println(new Date(t).toLocaleString());
+		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
+		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+		System.out.println("========>  收到时间： "+new Date(t*1000).toLocaleString());
+		System.out.println("========================================================");
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		long s = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+//		try {
+//			DBEClient.DBECServerInfo("192.168.43.127");
+//		} catch (GecException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println(new Date(t*1000).toLocaleString());
 		DBEClient.close();
 	}
 

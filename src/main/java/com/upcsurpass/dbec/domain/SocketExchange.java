@@ -1,8 +1,13 @@
 package com.upcsurpass.dbec.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
 import com.upcsurpass.dbec.tools.ByteTools;
 
 public class SocketExchange {
+	private static final Logger LOGGER = LoggerFactory.getLogger(SocketExchange.class);
 
 	int nExchangeID; // 命令ID
 	int nCount; // 数据包个数
@@ -87,8 +92,9 @@ public class SocketExchange {
                 (b[17] & 0xFF) << 8 |  
                 (b[18] & 0xFF) << 16 |  
                 (b[19] & 0xFF) << 24;  
-		this.buffer = b; // 这里没有取部分，是为了节省分配。
-//		System.arraycopy(b, 20, this.buffer, 0, b.length-20);
+		byte[] r = new byte[b.length-20];
+		System.arraycopy(b, 20, r, 0, b.length-20);
+		this.buffer = r; // 这里没有取部分，是为了节省分配。
 		
 	}
 
@@ -109,6 +115,7 @@ public class SocketExchange {
 	 * @return
 	 */
 	public byte[] toByte() {
+		LOGGER.info(this.nExchangeID+" "+this.nCount+" "+this.nLength+" "+this.nParam1+" "+this.nParam2+" "+this.buffer[0]+" "+this.buffer[1]+" "+this.buffer[2]+" "+this.buffer[3]);
 		int bufferLength = 0;
 		if(buffer!=null) bufferLength = buffer.length;
 		int length = 20 + bufferLength;

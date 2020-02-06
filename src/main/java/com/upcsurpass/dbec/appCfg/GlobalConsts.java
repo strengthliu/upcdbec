@@ -14,6 +14,7 @@ public final class GlobalConsts {
 	 * 9 命令ID列表
 	 */
 	// DBEC与DBES握手信号：（反馈信号=握手信号*1000）
+	public static final int DBEC_INIT = 1000;
 	public static final int DBEC_GETSERVERCURRENTTIME = 21;
 	public static final int DBEC_SETLOCALSERVERTIME = 22;
 

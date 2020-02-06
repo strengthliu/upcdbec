@@ -13,6 +13,7 @@ import com.upcsurpass.dbec.domain.SocketExchange;
 import com.upcsurpass.dbec.exception.GecException;
 import com.upcsurpass.dbec.service.IGecService;
 import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
+import com.upcsurpass.dbec.service.method.GetServerDevicePointInitInfo;
 
 /**
  * 参考一下JDBC。
@@ -57,7 +58,53 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	 * 不同请求，发送数据不同，接收数据不同，处理不同。
 	 * 同服务器连接相同。
 	 */
+
+	public static void DBECServerInfo(String lpszServerName) throws GecException{
+		DBEConnection connection = connections.get(lpszServerName);
+		PooledNIOSocketClient pnsc = connection.getObject();
+		LOGGER.debug(" 开始执行请求 ： PooledNIOSocketClient=> "+pnsc.toString());
+		
+		//========================================================
+		GetServerDevicePointInitInfo gsct = new GetServerDevicePointInitInfo(pnsc);
+		Long l = (Long) gsct.doRequest();
+		//========================================================
+		
+		connection.returnObject(pnsc);
+		return;
+		
+	}
 	
+	public static List<String> DBECEnumServerName() throws GecException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	public static List<String> DBECEnumDeviceName(String lpszServerName) throws GecException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	public static List<Long> DBECEnumTagID(String lpszServerName) throws GecException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	public static List<Long> DBECEnumTagIDOfDevice(String lpszServerName, long nDeviceID) throws GecException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	public static List<Long> DBECEnumTagIDOfDeviceByDeviceName(String lpszServerName, String lpszDeviceName)
+			throws GecException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 	public static long DBECGetServerCurrentTime(String lpszServerName) {
 		DBEConnection connection = connections.get(lpszServerName);
 		PooledNIOSocketClient pnsc = connection.getObject();
@@ -73,6 +120,13 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	}
 
 	
+	public void DBECSetLocalServerTime(String lpszServerName) throws GecException {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	
 	public long DBECGetLastError() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -86,12 +140,6 @@ public class DBEClient implements IDBEClient{//,IGecService {
 
 	
 	public void DBEC_ExitInstance() throws GecException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void DBECSetLocalServerTime(String lpszServerName) throws GecException {
 		// TODO Auto-generated method stub
 		
 	}
@@ -247,18 +295,6 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	}
 
 	
-	public List<String> DBECEnumServerName() throws GecException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
-	public List<String> DBECEnumDeviceName(String lpszServerName) throws GecException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
 	public double DBECGetTagRealField(String lpszServerName, long nTagID, String lpszFieldName) throws GecException {
 		// TODO Auto-generated method stub
 		return 0;
@@ -280,25 +316,6 @@ public class DBEClient implements IDBEClient{//,IGecService {
 
 	
 	public List<String> DBECEnumTagExtendType(String lpszServerName) throws GecException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
-	public List<Long> DBECEnumTagID(String lpszServerName) throws GecException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
-	public List<Long> DBECEnumTagIDOfDevice(String lpszServerName, long nDeviceID) throws GecException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
-	public List<Long> DBECEnumTagIDOfDeviceByDeviceName(String lpszServerName, String lpszDeviceName)
-			throws GecException {
 		// TODO Auto-generated method stub
 		return null;
 	}

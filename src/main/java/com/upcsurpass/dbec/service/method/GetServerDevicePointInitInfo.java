@@ -12,14 +12,14 @@ import com.upcsurpass.dbec.domain.SocketExchange;
 import com.upcsurpass.dbec.domain.SynchronizedMethod;
 import com.upcsurpass.dbec.tools.ByteTools;
 
-public class GetServerCurrentTime extends SynchronizedMethod {
-	private static final Logger LOGGER = LoggerFactory.getLogger(GetServerCurrentTime.class);
+public class GetServerDevicePointInitInfo extends SynchronizedMethod {
+	private static final Logger LOGGER = LoggerFactory.getLogger(GetServerDevicePointInitInfo.class);
 
 	/**
 	 * 这里应该修改一下，自动处理，而不应该留给用户
 	 * @param pnsc
 	 */
-	public GetServerCurrentTime(PooledNIOSocketClient pnsc) {
+	public GetServerDevicePointInitInfo(PooledNIOSocketClient pnsc) {
 		super(pnsc);
 	}
 
@@ -28,8 +28,8 @@ public class GetServerCurrentTime extends SynchronizedMethod {
 	public SocketExchange setSocketExchange() {
 		// 21 1 4 0 0 NULL
 		byte[] data = { 'N', 'U', 'L', 'L' };
-		SocketExchange se = new SocketExchange(GlobalConsts.DBEC_GETSERVERCURRENTTIME, 1, 4, 0, 0);
-//		SocketExchange se = new SocketExchange(GlobalConsts.DBEC_ENUMTAGNAME, 1, 4, 0, 0);
+//		SocketExchange se = new SocketExchange(GlobalConsts.DBEC_GETSERVERCURRENTTIME, 1, 4, 0, 0);
+		SocketExchange se = new SocketExchange(GlobalConsts.DBEC_INIT, 1, 4, 0, 0);
 		
 		se.setBuffer(data);
 		return se;
