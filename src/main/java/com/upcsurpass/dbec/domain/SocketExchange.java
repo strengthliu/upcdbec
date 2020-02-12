@@ -67,6 +67,7 @@ public class SocketExchange {
 
 	public SocketExchange(byte[] b) {
 //		0852000001000000040000000000000000000000199a365e
+//		LOGGER.debug("新建交换区，解析开始...");
 		// 写第一个参数
 		nExchangeID = b[0] & 0xFF |  
                 (b[1] & 0xFF) << 8 |  
@@ -93,8 +94,11 @@ public class SocketExchange {
                 (b[18] & 0xFF) << 16 |  
                 (b[19] & 0xFF) << 24;  
 		byte[] r = new byte[b.length-20];
+//		LOGGER.debug("新建交换区，复制数据区， 开始...");
 		System.arraycopy(b, 20, r, 0, b.length-20);
+//		LOGGER.debug("新建交换区，复制数据区， 结束...");
 		this.buffer = r; // 这里没有取部分，是为了节省分配。
+//		LOGGER.debug("新建交换区，赋值指针， 结束返回");
 		
 	}
 

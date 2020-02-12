@@ -3,6 +3,7 @@ package com.upcsurpass.dbec.domain;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -31,13 +32,14 @@ public abstract class SynchronizedMethod{ // extends MethodHandle {
 //	private CountDownLatch countDownLatchDataPackageCount;// = new CountDownLatch(1);
 	
 	PooledNIOSocketClient pnsc;
-	public SynchronizedMethod(PooledNIOSocketClient pnsc) {
+	protected SynchronizedMethod(PooledNIOSocketClient pnsc) {
 		this.pnsc = pnsc;
 		this.se = setSocketExchange();
 		registe();
 	}
 
-	private SocketExchange se;
+	protected SynchronizedMethod(){}
+	protected SocketExchange se;
 	public abstract SocketExchange setSocketExchange();
 	
 	/**
@@ -60,17 +62,26 @@ public abstract class SynchronizedMethod{ // extends MethodHandle {
 	 */
 //	public abstract void addResponseData(SocketExchange se);
 	public void addResponseData(SocketExchange se ) {
-		if(se.getnExchangeID()==GlobalConsts.DBEC_GETSERVERCURRENTTIME*GlobalConsts.RESPONSE_COM_RATE) {
+		LOGGER.debug("addResponseData .. 开始 .. getnExchangeID="+se.getnExchangeID()+" this.se.nExchangeID="+this.se.nExchangeID);
+		if(se.getnExchangeID()==this.se.nExchangeID*GlobalConsts.RESPONSE_COM_RATE) {
 			//如果是第1包，要判断包数
 		    if(this.response==null||this.response.size()==0) {
+		    	LOGGER.debug("addResponseData .. 第1包数据打包， ..共有"+se.getnCount()+" 包数据。");
 				this.packageCount = se.getnCount();
 		    }
+			LOGGER.debug("addResponseData .. 添加一包byte数据 ..");
+			LOGGER.debug(".....................................................................");
 		    this.response.add(se.getBuffer());
+			LOGGER.debug("addResponseData .. 添加一包byte数据 结束 ..");
+			LOGGER.debug("addResponseData .. countDown 数据传输结束，通知打包返回 ..");
 //		    System.arraycopy(se.getBuffer(), 0, this.response, this.response.size(), 1);
-		    if(this.packageCount == this.response.size())
-		    		this.countDownLatchReqResp.countDown();
+		    if(this.packageCount == this.response.size()) {
+				LOGGER.debug("addResponseData .. countDown 数据传输结束，通知打包返回 ..");
+		    	this.countDownLatchReqResp.countDown();
+		    }
 		}
-			
+		LOGGER.debug("addResponseData .. 结束 ..");
+
 //	    System.arraycopy(d, 0, this.response, this.response.length, 1);
 	}
 

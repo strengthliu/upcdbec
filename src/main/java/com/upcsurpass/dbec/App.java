@@ -2,8 +2,12 @@ package com.upcsurpass.dbec;
 
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.upcsurpass.dbec.appCfg.GlobalConsts;
 import com.upcsurpass.dbec.client.DBEClient;
+import com.upcsurpass.dbec.domain.SynchronizedMethod;
 import com.upcsurpass.dbec.exception.GecException;
 
 /**
@@ -11,22 +15,32 @@ import com.upcsurpass.dbec.exception.GecException;
  *
  */
 public class App {
+	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+
 	public static void main(String[] args) {
 		// GetServerCurrentTime gct = new GetServerCurrentTime();
 //		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
 //		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
-		
-		DBEClient.connect("192.168.1.149", GlobalConsts.DEFAULT_DBESERVERPORT);
-		long t = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+		LOGGER.debug("客户端建立连接 开始");
+		DBEClient.connect("192.168.3.217", GlobalConsts.DEFAULT_DBESERVERPORT);
+		LOGGER.debug("客户端建立连接 结束");
+		long t = DBEClient.DBECGetServerCurrentTime("192.168.3.217");
 		System.out.println("========>  收到时间： "+new Date(t*1000).toLocaleString());
-		System.out.println("========================================================");
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		long s = DBEClient.DBECGetServerCurrentTime("192.168.1.149");
+//		System.out.println("========================================================");
+//		try {
+//			Thread.sleep(1000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+//		try {
+//			DBEClient.DBECServerInfo("192.168.3.217");
+//		} catch (GecException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
 //		try {
 //			DBEClient.DBECServerInfo("192.168.43.127");
 //		} catch (GecException e) {

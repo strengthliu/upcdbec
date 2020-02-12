@@ -81,8 +81,7 @@ public class NioSocketClient {
 	/**
 	 * 发送任务处理线程
 	 * 
-	 * @param data
-	 *            byte[]
+	 * @param data byte[]
 	 */
 	public void sendData(final byte[] data) {
 		if (data == null) {
@@ -91,9 +90,9 @@ public class NioSocketClient {
 		}
 		try {
 			LOGGER.debug("sendData => " + data);
-			if(sendDataQueue.offer(data)) { // 向队列里插入一个请求数据
-				LOGGER.debug("向队列中写入数据成功。当前队列中数量=> "+sendDataQueue.size());
-			}else {
+			if (sendDataQueue.offer(data)) { // 向队列里插入一个请求数据
+				LOGGER.debug("向队列中写入数据成功。当前队列中数量=> " + sendDataQueue.size());
+			} else {
 				LOGGER.debug("向队列中写入数据失败");
 			}
 		} catch (Exception e) {
@@ -119,14 +118,14 @@ public class NioSocketClient {
 						try {
 //							LOGGER.debug("当前isShutDown=>"+isShutDown);
 //							Thread.sleep(100);
-							LOGGER.debug("当前isShutDown=>"+isShutDown);
+							LOGGER.debug("当前isShutDown=>" + isShutDown);
 							if (!isShutDown) {
-								LOGGER.debug("循环等待。要从任务队列中取数据。当前队列数量=> "+sendDataQueue.size());
-								LOGGER.debug("循环等待。要从任务队列中取数据。当前线程-> "+Thread.currentThread().getName());
+								LOGGER.debug("循环等待。要从任务队列中取数据。当前队列数量=> " + sendDataQueue.size());
+								LOGGER.debug("循环等待。要从任务队列中取数据。当前线程-> " + Thread.currentThread().getName());
 								data = sendDataQueue.take(); // 从队列中取出一个要发送的数据
-								
+
 							} else {
-								LOGGER.debug("发送数据线程，收到关闭指令，关闭返回。当前线程-> "+Thread.currentThread().getName());
+								LOGGER.debug("发送数据线程，收到关闭指令，关闭返回。当前线程-> " + Thread.currentThread().getName());
 								return;
 							}
 						} catch (Exception e) {
@@ -142,7 +141,7 @@ public class NioSocketClient {
 							/**
 							 * TODO: 一个socket可以有多个channel，这里先只1个。
 							 */
-							if(socketChannel.isConnected()) {
+							if (socketChannel.isConnected()) {
 								LOGGER.info("发送数据线程 当前连接正常 准备写入数据");
 								socketChannel.write(sendDataBuffer); // 向频道中写入
 							} else {
@@ -218,7 +217,7 @@ public class NioSocketClient {
 						} else if (key.isValid() && key.isWritable()) {// 如果可往客户端连接中写入数据，则处理该事件
 							LOGGER.debug("===========收到可写信号事件，当前线程 => " + Thread.currentThread().getName());
 							// write(key);
-						} 
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -228,35 +227,42 @@ public class NioSocketClient {
 	}
 
 	/**
-	 * TODO: 现在有错误。由于可能两个线程都收到了读数据的信号，就会执行两遍读数据。
-	 * 
+	 * TODO: 现在有错误。
+	 * 1\由于可能两个线程都收到了读数据的信号，就会执行两遍读数据。解决了。
+	 * 2、多段返回数据时，卡很长时间，强烈怀疑线程卡住了。还可能是内存分配原因，导致垃圾回收阻塞。
+	 * 		问题2一定存在。
 	 * @param client
 	 * @throws IOException
 	 */
+	ByteBuffer dataBuffer = ByteBuffer.allocate(DATA_MAX_LEN); // 分配缓冲区
 	private void read(SocketChannel client) throws IOException {
-		LOGGER.debug("返回值 ：read(SocketChannel client) 当前线程=> " + Thread.currentThread().getName());
-		ByteBuffer dataBuffer = ByteBuffer.allocate(DATA_MAX_LEN); // 分配缓冲区
+		LOGGER.debug("1 返回值 ：read(SocketChannel client) 当前线程=> " + Thread.currentThread().getName());
+
+//		dataBuffer.
 		dataBuffer.clear();
-		int readLen = client.read(dataBuffer);
-		if(readLen<=0) {
-			LOGGER.debug("读取返回值 ：readLen<=0 当前线程=> " + Thread.currentThread().getName());
+		if (client.isConnectionPending() || client.isConnected()) {
+			int readLen = client.read(dataBuffer);
+			if (readLen <= 0) {
+				LOGGER.debug("1.1 退出 读取返回值 ：readLen<=0 当前线程=> " + Thread.currentThread().getName());
+				return;
+			}
+			byte[] result = new byte[readLen];
+			dataBuffer.flip();
+			dataBuffer.get(result);
+			SocketExchange se = new SocketExchange(result);
+			/**
+			 * TODO: 1、应该根据se里的命令ID等信息，决定分配给哪一个。 现在DBES还不支持。 2、应该根据Client（channel决定结果发给谁）
+			 */
+			if (synchronizedMethod != null) {
+				synchronizedMethod.addResponseData(se);
+			} else {
+				LOGGER.debug("no synchronizedMethod");
+			}
+			LOGGER.debug("4 返回值结束 3：read(SocketChannel client) 当前线程=> " + Thread.currentThread().getName());
 			return;
+		} else {
+			LOGGER.debug("4.1 退出 返回值 读取数据，但连接已经关闭。 当前线程=> " + Thread.currentThread().getName());
 		}
-		byte[] result = new byte[readLen];
-		dataBuffer.flip();
-		dataBuffer.get(result);
-		LOGGER.debug("返回值 ：" + ByteTools.byteArrToHexString(result));
-		// 通知处理数据
-		SocketExchange se = new SocketExchange(result);
-		/**
-		 * TODO: 1、应该根据se里的命令ID等信息，决定分配给哪一个。 现在DBES还不支持。 2、应该根据Client（channel决定结果发给谁）
-		 */
-		if (synchronizedMethod != null)
-			synchronizedMethod.addResponseData(se);
-		else
-			LOGGER.debug("no synchronizedMethod");
-		LOGGER.debug("返回值 ：read(SocketChannel client) 当前线程=> " + Thread.currentThread().getName());
-		return;
 	}
 
 	/**
@@ -279,16 +285,16 @@ public class NioSocketClient {
 			e.printStackTrace();
 		}
 		executor.shutdownNow();
-        // (所有的任务都结束的时候，返回TRUE)  
-        try {
-			if(!executor.awaitTermination(500, TimeUnit.MILLISECONDS)){  
-			    // 超时的时候向线程池中所有的线程发出中断(interrupted)。  
-				executor.shutdownNow();  
+		// (所有的任务都结束的时候，返回TRUE)
+		try {
+			if (!executor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+				// 超时的时候向线程池中所有的线程发出中断(interrupted)。
+				executor.shutdownNow();
 			}
 		} catch (InterruptedException e) {
 			LOGGER.debug("关闭时发生Interrupt异常");
 			e.printStackTrace();
-		}  
+		}
 	}
 
 	/**

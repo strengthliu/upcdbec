@@ -33,9 +33,16 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	/********************* IDBEClient ***********************/
 	
 	public static void connect(String serverName, int port) {
+		LOGGER.debug("测试连接参数有效性开始： serverName="+serverName+" port="+port);
 //		servers.put(serverName, port);
-		DBEConnection connection = new DBEConnection(serverName,port);
-		connections.put(serverName, connection);
+		// 测试连接是否正确
+		boolean connectable = SocketClient.testConnect(serverName,port);
+		if(connectable) {
+			DBEConnection connection = new DBEConnection(serverName,port);
+			connections.put(serverName, connection);
+		}else {
+			throw new IllegalStateException("指定的GIP服务器地址和端口，不能正常连接。");
+		}
 	}
 
 	public static void close(String serverName) {
@@ -59,6 +66,14 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	 * 同服务器连接相同。
 	 */
 
+	/**
+	 * 从服务器上获取服务器信息，包括服务器、设备、点位等。
+	 * 信息量很大，获取后要保存在本地缓存。后面读取的都是从本地读取。
+	 * 如果是UPCVision,已经做了保存机制，就不需要保存了。
+	 * 
+	 * @param lpszServerName
+	 * @throws GecException
+	 */
 	public static void DBECServerInfo(String lpszServerName) throws GecException{
 		DBEConnection connection = connections.get(lpszServerName);
 		PooledNIOSocketClient pnsc = connection.getObject();
@@ -66,14 +81,20 @@ public class DBEClient implements IDBEClient{//,IGecService {
 		
 		//========================================================
 		GetServerDevicePointInitInfo gsct = new GetServerDevicePointInitInfo(pnsc);
-		Long l = (Long) gsct.doRequest();
+		Object l =  gsct.doRequest();
 		//========================================================
-		
+		LOGGER.debug(l.toString());
 		connection.returnObject(pnsc);
 		return;
 		
 	}
 	
+	/**
+	 * TODO: 这里有个要确认的东西。
+	 * 		这里的服务器是指DBES，还是用户的实时数据库？
+	 * @return
+	 * @throws GecException
+	 */
 	public static List<String> DBECEnumServerName() throws GecException {
 		// TODO Auto-generated method stub
 		return null;
@@ -105,6 +126,11 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	}
 
 
+	/**
+	 * 获取当前服务器时间
+	 * @param lpszServerName
+	 * @return
+	 */
 	public static long DBECGetServerCurrentTime(String lpszServerName) {
 		DBEConnection connection = connections.get(lpszServerName);
 		PooledNIOSocketClient pnsc = connection.getObject();
@@ -120,6 +146,11 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	}
 
 	
+	/**
+	 * 设置本地服务器时间
+	 * @param lpszServerName
+	 * @throws GecException
+	 */
 	public void DBECSetLocalServerTime(String lpszServerName) throws GecException {
 		// TODO Auto-generated method stub
 		
@@ -357,15 +388,15 @@ public class DBEClient implements IDBEClient{//,IGecService {
 	}
 
 	
-	public String DBECGetDeviceNote(String lpszServerName, String lpszDeviceName, long nDeviceID, int nBufLen)
-			throws GecException {
+	
+	public String DBECGetTagStringFields(String serverName, String tagName, Long pointId, ByteBuffer tagbuffer,
+			String string) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	
-	public String DBECGetTagStringFields(String serverName, String tagName, Long pointId, ByteBuffer tagbuffer,
-			String string) {
+	public String DBECGetDeviceNote(String lpszServerName, String lpszDeviceName, long nDeviceID, int nBufLen)
+			throws GecException {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -10,7 +10,7 @@ import com.upcsurpass.dbec.service.method.GetServerCurrentTime;
 
 public abstract class DBEConnectionPool {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DBEConnectionPool.class);
-    public static int numObjects = 5; // 对象池的大小
+    public static int numObjects = 1; // 对象池的大小
     public static int maxObjects = 20; // 对象池最大的大小
     protected Vector<PooledNIOSocketClient> objects = null; // 存放对象池中对象的向量(PooledObject类型)
 
